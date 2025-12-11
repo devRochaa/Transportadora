@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Transportadora.API/Transportadora.API.csproj" />
+  <Project Path="Transportadora.Application/Transportadora.Application.csproj" />
+  <Project Path="Transportadora.Domain/Transportadora.Domain.csproj" />
+  <Project Path="Transportadora.Infrasctructure/Transportadora.Infrasctructure.csproj" />
+</Solution>
