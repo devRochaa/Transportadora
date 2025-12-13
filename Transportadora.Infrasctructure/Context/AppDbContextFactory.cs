@@ -8,7 +8,7 @@ internal class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseSqlServer(
-            connectionString: "Server=(localdb)\\mssqllocaldb;Database=transportadora;Trusted_Connection=True;TrustServerCertificate=True"
+            connectionString: "Server=(localdb)\\Local;Database=transportadora;Trusted_Connection=True;TrustServerCertificate=True"
             //    sqlServerOption.MigrationsAssembly(typeof(DependencyInjection).Namespace);
             //}
             );

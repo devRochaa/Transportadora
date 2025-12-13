@@ -2,13 +2,9 @@
 
 namespace Transportadora.Domain.Entities;
 
-public sealed class AddressEntity : IEntity, IDateTracked, ISoftDelete
+public sealed class AddressEntity : IEntity
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset LastUpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
-
     public string? ZipCode { get; set; }
     public required string Country { get; set; }
     public required string State { get; set; }

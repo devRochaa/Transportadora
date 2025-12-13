@@ -13,8 +13,8 @@ public class OrderController : ControllerBase
 {
     [HttpPost("frete")]
     public async Task<IActionResult> FretePost([FromServices] GetSupplierAddressByIdAsync getSupplierByIdAsync,
-                                               [FromBody] CreateOrderRequest req,
-                                               CancellationToken cancellationToken)
+                                         [FromBody] CreateOrderRequest req,
+                                         CancellationToken cancellationToken)
     {
         try
         {
