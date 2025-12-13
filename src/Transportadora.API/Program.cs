@@ -1,17 +1,47 @@
+using Microsoft.EntityFrameworkCore;
+using Transportadora.API.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "Logistics API",
+        Version = "v1",
+        Description = "API para controle de entregas, rotas e rastreamento"
+    });
+});
+
+// Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    );
+
+#if DEBUG
+    options.EnableSensitiveDataLogging();
+    options.EnableDetailedErrors();
+#endif
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Logistics API v1");
+        options.RoutePrefix = string.Empty; // abre direto em /
+    });
 }
 
 app.UseHttpsRedirection();
