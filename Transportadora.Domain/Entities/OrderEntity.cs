@@ -3,9 +3,13 @@ using Transportadora.Domain.Enums;
 
 namespace Transportadora.Domain.Entities;
 
-public sealed class OrderEntity : IEntity
+public sealed class OrderEntity : IEntity, IDateTracked, ISoftDelete
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset LastUpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
+
     public required DateTime OrderDate { get; set; }
     public DateTime? DeliveryDate { get; set; }
     public DateTime? MaxDeliveryDate { get; set; }
