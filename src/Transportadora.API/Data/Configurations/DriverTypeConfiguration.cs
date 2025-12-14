@@ -30,5 +30,8 @@ public class DriverTypeConfiguration : IEntityTypeConfiguration<Driver>
 
         builder.Property(x => x.IsActive)
             .IsRequired();
+
+        builder.Property(x => x.IsAvailable)
+            .IsRequired();
     }
 }

@@ -6,14 +6,14 @@ namespace Transportadora.API.Shared.Enums;
 public enum DeliveryStatus
 {
     /// <summary>
-    /// Aguardando atribuição de entregador
+    /// Aguardando atribuição de entregador e veículo
     /// </summary>
     Pending,
 
     /// <summary>
-    /// Entregador atribuído à entrega
+    /// Entregador e veículo atribuídos
     /// </summary>
-    Assigned,
+    ReadyToGo,
 
     /// <summary>
     /// Entrega em trânsito

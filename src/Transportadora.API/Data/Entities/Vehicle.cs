@@ -6,4 +6,7 @@ public class Vehicle : BaseEntity
     public string Type { get; set; } = string.Empty;
 
     public bool IsActive { get; set; }
+    public bool IsAvailable { get; set; }
+
+    public ICollection<DeliveryRoute> Routes { get; set; } = new List<DeliveryRoute>();
 }

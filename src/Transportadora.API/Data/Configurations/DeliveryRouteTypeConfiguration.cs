@@ -25,6 +25,20 @@ public class DeliveryRouteTypeConfiguration : IEntityTypeConfiguration<DeliveryR
         builder.Property(x => x.StartedAt);
         builder.Property(x => x.FinishedAt);
 
+        builder
+            .HasOne(x => x.Driver)
+            .WithMany(d => d.Routes)
+            .HasForeignKey(x => x.DriverId)
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false);
+
+        builder
+            .HasOne(x => x.Vehicle)
+            .WithMany(v => v.Routes)
+            .HasForeignKey(x => x.VehicleId)
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false);
+
         builder.HasIndex(x => new { x.DeliveryId, x.Status });
 
         builder.HasMany(x => x.Stops)

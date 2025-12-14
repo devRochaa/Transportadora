@@ -29,5 +29,8 @@ public class VehicleTypeConfiguration : IEntityTypeConfiguration<Vehicle>
 
         builder.Property(x => x.IsActive)
             .IsRequired();
+
+        builder.Property(x => x.IsAvailable)
+            .IsRequired();
     }
 }

@@ -1,5 +1,8 @@
-﻿namespace Transportadora.API.Shared.Enums;
+﻿using System.Text.Json.Serialization;
 
+namespace Transportadora.API.Shared.Enums;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RouteStatus
 {
     /// <summary>
