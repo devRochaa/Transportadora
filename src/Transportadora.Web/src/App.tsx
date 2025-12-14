@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { api } from "./api";
 import type { VehiclePositionArgs } from "./args";
 
-const ROUTE_ID = "D710ED84-5D76-4ACF-A185-3495AB968FDF";
+const ROUTE_ID = "65c5b2ac-fefc-49fb-a46e-fd2343aa7593";
 const INTERVAL_MS = 5_000;
 
 export default function App() {
