@@ -3,8 +3,8 @@ FROM node:24-bookworm AS build
 
 WORKDIR /app
 
-# Copia apenas arquivos de dependência do frontend
-COPY src/Transportadora.Web/package*.json ./
+# Copia todo o código do frontend
+COPY . .
 
 # Variáveis de build
 ARG NODE_ENV=production
@@ -14,20 +14,20 @@ ARG VITE_API_URL
 # Instala dependências
 RUN npm install
 
-# Copia todo o código do frontend
-COPY src/Transportadora.Web ./
+# Copia apenas arquivos de dependência do frontend
+COPY src/Transportadora.Web/package*.json ./
 
 # Build
 RUN npm run $NODE_BUILD_SCRIPT
 
 # Ajuste automático para CRA ou Vite
 RUN if [ -d "dist" ]; then \
-        echo "Build Vite detectado"; \
+    echo "Build Vite detectado"; \
     elif [ -d "build" ]; then \
-        echo "Build CRA detectado"; \
-        mv build dist; \
+    echo "Build CRA detectado"; \
+    mv build dist; \
     else \
-        echo "Erro: pasta de build não encontrada" && exit 1; \
+    echo "Erro: pasta de build não encontrada" && exit 1; \
     fi
 
 # Stage 2: Nginx
