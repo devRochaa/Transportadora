@@ -1,0 +1,14 @@
+name: transportadora
+
+services:
+  # ------------------------------------ API ----------------------------------- #
+  api:
+    build:
+      context: src
+      dockerfile: Transportadora.API/Dockerfile
+
+  # ------------------------------------ WEB ----------------------------------- #
+  web:
+    build:
+      context: src/Transportadora.Web
+      dockerfile: Dockerfile
