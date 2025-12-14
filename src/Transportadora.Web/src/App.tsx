@@ -1,12 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import type { VehiclePositionArgs } from "./args";
 
-const ROUTE_ID = "65c5b2ac-fefc-49fb-a46e-fd2343aa7593";
-const INTERVAL_MS = 5_000;
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+const ROUTE_ID = "314f93f3-1000-4c06-a392-a158d20ba309";
+const INTERVAL_MS = 2_000;
 
 export default function App() {
+  const [centerMap, setCenterMap] = useState<boolean>(true);
+
   const lastPositionRef = useRef<GeolocationCoordinates | null>(null);
+
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
 
   // Captura GPS
   useEffect(() => {
@@ -22,6 +30,8 @@ export default function App() {
       (error) => {
         if (error.code === error.TIMEOUT) {
           console.warn("GPS demorou, aguardando novo fix...");
+          // reload para tentar recuperar o GPS
+          window.location.reload();
           return;
         }
         console.error("Erro GPS crítico", error);
@@ -60,10 +70,58 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // 🗺️ Observador de GPS → atualiza mapa
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const coords = lastPositionRef.current;
+      if (!coords) return;
+
+      const latLng: [number, number] = [coords.latitude, coords.longitude];
+
+      if (!mapRef.current) {
+        mapRef.current = L.map("map").setView(latLng, 16);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap",
+        }).addTo(mapRef.current);
+
+        markerRef.current = L.marker(latLng).addTo(mapRef.current);
+        return;
+      }
+      markerRef.current?.setLatLng(latLng);
+
+      if (centerMap) {
+        mapRef.current.setView(latLng);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [centerMap]);
+
   return (
     <div style={{ padding: 20 }}>
       <h1>Route Tracker</h1>
       <p>Enviando localização a cada {INTERVAL_MS / 1000} segundos...</p>
+
+      <label style={{ display: "block", marginTop: 10 }}>
+        <input
+          type="checkbox"
+          checked={centerMap}
+          onChange={(e) => setCenterMap(e.target.checked)}
+          style={{ marginRight: 6 }}
+        />
+        Centralizar no meu local
+      </label>
+
+      <div
+        id="map"
+        style={{
+          height: 400,
+          marginTop: 20,
+          borderRadius: 8,
+          overflow: "hidden",
+        }}
+      />
     </div>
   );
 }
