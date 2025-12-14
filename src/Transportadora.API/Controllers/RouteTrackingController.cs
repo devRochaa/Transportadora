@@ -4,6 +4,7 @@ using Transportadora.API.Data.Entities;
 using Transportadora.API.Shared.Enums;
 
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace Transportadora.API.Controllers;
 
@@ -11,35 +12,37 @@ namespace Transportadora.API.Controllers;
 [Route("api/route-tracking")]
 public sealed class RouteTrackingController(ApplicationDbContext db) : ControllerBase
 {
+    public record VehiclePositionArgs(
+        [property: JsonPropertyName("latitude")] double Latitude,
+        [property: JsonPropertyName("longitude")] double Longitude,
+        [property: JsonPropertyName("speed")] double Speed,
+        [property: JsonPropertyName("heading")] double Heading);
     // ingestão de telemetria
     [HttpPost("routes/{routeId:guid}/positions")]
     public async Task<IActionResult> Register(
-        Guid routeId,
-        double latitude,
-        double longitude,
-        double speed,
-        double heading,
+        [FromRoute] Guid routeId,
+        [FromBody] VehiclePositionArgs args,
         CancellationToken ct)
     {
         // valida rota (mínimo necessário)
         var routeStatus = await db.Routes
             .Where(r => r.Id == routeId)
-            .Select(r => r.Status)
+            .Select(r => (RouteStatus?)r.Status)
             .FirstOrDefaultAsync(ct);
 
-        if (routeStatus == default)
-            return NotFound("Rota não encontrada");
+        if (routeStatus is null || routeStatus == RouteStatus.Planned)
+            return NotFound("Rota não encontrada ou ainda não iniciada");
 
-        if (routeStatus != RouteStatus.InProgress)
-            return BadRequest("Rota não está em execução");
+        if (routeStatus == RouteStatus.Finished || routeStatus == RouteStatus.Cancelled)
+            return BadRequest("Rota já foi finalizada ou cancelada");
 
         var position = new VehiclePosition
         {
             RouteId = routeId,
-            Latitude = latitude,
-            Longitude = longitude,
-            Speed = speed,
-            Heading = heading,
+            Latitude = args.Latitude,
+            Longitude = args.Longitude,
+            Speed = args.Speed,
+            Heading = args.Heading,
             CapturedAt = DateTimeOffset.UtcNow
         };
 

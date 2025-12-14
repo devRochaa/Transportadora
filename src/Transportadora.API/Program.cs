@@ -44,6 +44,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// allow everything (for demo purposes)
+app.UseCors(policy =>
+    policy.AllowAnyOrigin()
+          .AllowAnyMethod()
+          .AllowAnyHeader());
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

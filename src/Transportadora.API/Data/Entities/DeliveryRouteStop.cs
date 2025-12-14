@@ -1,4 +1,5 @@
-﻿using Transportadora.API.Shared.Enums;
+﻿using System.Text.Json.Serialization;
+using Transportadora.API.Shared.Enums;
 
 namespace Transportadora.API.Data.Entities;
 
@@ -17,5 +18,6 @@ public class DeliveryRouteStop : BaseEntity
     public int Sequence { get; set; }
 
     public Guid RouteId { get; set; }
+    [JsonIgnore]
     public DeliveryRoute Route { get; set; } = default!;
 }
