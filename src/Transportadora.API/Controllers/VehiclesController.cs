@@ -180,7 +180,10 @@ public sealed class VehiclesController(ApplicationDbContext db) : ControllerBase
         route.VehicleId = null;
 
         var vehicle = await db.Vehicles.FindAsync([vehicleId], ct);
-        vehicle?.IsAvailable = true;
+        if (vehicle is not null)
+        {
+            vehicle.IsAvailable = true;
+        }
 
         // como está removendo o veículo, volta o status da entrega para pendente se estava pronta para sair
         if (route.Delivery.Status == DeliveryStatus.ReadyToGo)

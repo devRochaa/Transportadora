@@ -182,7 +182,10 @@ public sealed class DriversController(ApplicationDbContext db) : ControllerBase
         route.DriverId = null;
 
         var driver = await db.Drivers.FindAsync([driverId], ct);
-        driver?.IsAvailable = true;
+        if (driver is not null)
+        {
+            driver.IsAvailable = true;
+        }
 
         // como está removendo o motorista, volta o status da entrega para pendente se estava pronta para sair
         if (route.Delivery.Status == DeliveryStatus.ReadyToGo)

@@ -81,8 +81,15 @@ public sealed class RoutesController(ApplicationDbContext db) : ControllerBase
 
         db.Routes.Add(route);
 
-        driver?.IsAvailable = false;
-        vehicle?.IsAvailable = false;
+        if (driver is not null)
+        {
+            driver.IsAvailable = false;
+        }
+
+        if (vehicle is not null)
+        {
+            vehicle.IsAvailable = false;
+        }
 
         if (delivery.Status == DeliveryStatus.Pending
             && driver is not null
@@ -165,10 +172,16 @@ public sealed class RoutesController(ApplicationDbContext db) : ControllerBase
         route.FinishedAt = DateTimeOffset.UtcNow;
 
         // libera motorista
-        route.Driver?.IsAvailable = true;
+        if (route.Driver is not null)
+        {
+            route.Driver.IsAvailable = true;
+        }
 
         // libera veículo
-        route.Vehicle?.IsAvailable = true;
+        if (route.Vehicle is not null)
+        {
+            route.Vehicle.IsAvailable = true;
+        }
 
         await db.SaveChangesAsync(ct);
         return NoContent();
