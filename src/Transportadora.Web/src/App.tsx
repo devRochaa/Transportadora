@@ -8,6 +8,13 @@ import "leaflet/dist/leaflet.css";
 const ROUTE_ID = "65c5b2ac-fefc-49fb-a46e-fd2343aa7593";
 const INTERVAL_MS = 2_000;
 
+const customIcon = L.icon({
+  iconUrl:
+    "https://assets.streamlinehq.com/image/private/w_300,h_300,ar_1/f_auto/v1/icons/map-location/map-arrow-up-8k25gf4o22x7q90qr2e44b.png/map-arrow-up-qcn1lc5qxcspcmq9g6rsh.png?_a=DATAg1AAZAA0",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
 export default function App() {
   // Flag de UX: mapa acompanha ou não o usuário
   const [centerMap, setCenterMap] = useState<boolean>(true);
@@ -24,6 +31,8 @@ export default function App() {
   const lastConfirmedRef = useRef<{
     latitude: number;
     longitude: number;
+    heading?: number | null;
+    speed?: number | null;
   } | null>(null);
 
   // =========================
@@ -85,6 +94,8 @@ export default function App() {
         lastConfirmedRef.current = {
           latitude: coords.latitude,
           longitude: coords.longitude,
+          heading: coords.heading,
+          speed: coords.speed,
         };
 
         console.log("Posição enviada", payload);
@@ -119,7 +130,9 @@ export default function App() {
           attribution: "© OpenStreetMap",
         }).addTo(mapRef.current);
 
-        markerRef.current = L.marker(latLng).addTo(mapRef.current);
+        markerRef.current = L.marker(latLng, {
+          icon: customIcon,
+        }).addTo(mapRef.current);
 
         // Primeiro ponto da rota confirmada
         pathRef.current.push(latLng);
@@ -135,6 +148,20 @@ export default function App() {
       // Atualiza a rota somente com pontos confirmados
       pathRef.current.push(latLng);
       polylineRef.current?.setLatLngs(pathRef.current);
+
+      // Rotação do marker pelo heading (se fizer sentido)
+      if (
+        confirmed.heading != null &&
+        confirmed.speed != null &&
+        confirmed.speed > 1 && // evita girar parado
+        markerRef.current
+      ) {
+        const el = markerRef.current.getElement();
+        if (el) {
+          el.style.transformOrigin = "center";
+          el.style.transform = `rotate(${confirmed.heading}deg)`;
+        }
+      }
 
       // Centraliza o mapa se a flag estiver ativa
       if (centerMap) {
