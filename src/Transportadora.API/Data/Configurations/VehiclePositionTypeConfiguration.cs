@@ -12,10 +12,10 @@ public class VehiclePositionTypeConfiguration : IEntityTypeConfiguration<Vehicle
 
         builder
             .Property(x => x.Id)
-            .HasDefaultValueSql("NEWID()");
+            .HasDefaultValueSql("gen_random_uuid()");
         builder
             .Property(x => x.CreatedAt)
-            .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         builder.Property(x => x.Latitude)
             .IsRequired();
