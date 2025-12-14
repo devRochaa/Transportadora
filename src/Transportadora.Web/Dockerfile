@@ -15,7 +15,7 @@ ARG VITE_API_URL
 RUN npm install
 
 # Copia apenas arquivos de dependência do frontend
-COPY src/Transportadora.Web/package*.json ./
+COPY package*.json ./
 
 # Build
 RUN npm run $NODE_BUILD_SCRIPT
