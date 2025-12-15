@@ -10,6 +10,23 @@ namespace Transportadora.API.Controllers;
 [Route("api/routes")]
 public sealed class RoutesController(ApplicationDbContext db) : ControllerBase
 {
+    [HttpGet("{routeId}/timeline")]
+    public async Task<IActionResult> Get([FromRoute] Guid routeId, CancellationToken cancellationToken)
+    {
+        var timeline = await db.VehiclePositions
+            .Where(vp => vp.RouteId == routeId)
+            .OrderBy(vp => vp.CapturedAt)
+            .Select(vp => new
+            {
+                vp.Latitude,
+                vp.Longitude,
+                vp.CapturedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return Ok(timeline);
+    }
+
     // cria uma nova rota (troca de motorista, veículo ou filial)
     [HttpPost]
     public async Task<IActionResult> Create(
