@@ -6,7 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 const ROUTE_ID = "65c5b2ac-fefc-49fb-a46e-fd2343aa7593";
-const INTERVAL_MS = 2_000;
+const INTERVAL_MS = 200;
 
 const customIcon = L.icon({
   iconUrl:
