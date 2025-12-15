@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using Transportadora.API.Data;
 using Transportadora.API.Data.Entities;
 using Transportadora.API.Shared.Enums;
-
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
 
 namespace Transportadora.API.Controllers;
 
