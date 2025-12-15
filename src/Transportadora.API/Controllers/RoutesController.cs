@@ -14,6 +14,7 @@ public sealed class RoutesController(ApplicationDbContext db) : ControllerBase
     public async Task<IActionResult> Get([FromRoute] Guid routeId, CancellationToken cancellationToken)
     {
         var timeline = await db.VehiclePositions
+            .AsNoTracking()
             .Where(vp => vp.RouteId == routeId)
             .OrderBy(vp => vp.CapturedAt)
             .Select(vp => new
