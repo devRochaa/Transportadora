@@ -15,19 +15,29 @@ const customIcon = L.icon({
   iconAnchor: [16, 16],
 });
 
+const startIcon = L.icon({
+  iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/flag.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
+async function loadRouteTimeline(routeId: string) {
+  const { data } = await api.get<
+    {
+      latitude: number;
+      longitude: number;
+      capturedAt: string;
+    }[]
+  >(`/routes/${routeId}/timeline`);
+
+  return data.map((p) => [p.latitude, p.longitude] as L.LatLngTuple);
+}
+
 export default function TrackingPage() {
-  // Flag de UX: mapa acompanha ou não o usuário
-  const [centerMap, setCenterMap] = useState<boolean>(true);
+  const startMarkerRef = useRef<L.Marker | null>(null);
+  const [centerMap, setCenterMap] = useState(true);
 
-  // =========================
-  // GPS cru (vem do dispositivo)
-  // =========================
   const lastPositionRef = useRef<GeolocationCoordinates | null>(null);
-
-  // =========================
-  // GPS confirmado (só após sucesso na API)
-  // Fonte da verdade para o mapa e rota
-  // =========================
   const lastConfirmedRef = useRef<{
     latitude: number;
     longitude: number;
@@ -35,17 +45,57 @@ export default function TrackingPage() {
     speed?: number | null;
   } | null>(null);
 
-  // =========================
-  // CONTROLES DO MAPA
-  // =========================
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
-
-  // Linha da rota percorrida (confirmada pela API)
-  const pathRef = useRef<L.LatLngTuple[]>([]);
   const polylineRef = useRef<L.Polyline | null>(null);
+  const pathRef = useRef<L.LatLngTuple[]>([]);
 
-  // Captura GPS
+  // Flag para impedir inicialização dupla do mapa
+  const mapInitializedRef = useRef(false);
+
+  // =========================
+  // Timeline (rota já percorrida)
+  // =========================
+  useEffect(() => {
+    (async () => {
+      const timeline = await loadRouteTimeline(ROUTE_ID);
+      if (timeline.length === 0) return;
+
+      const lastPoint = timeline[timeline.length - 1];
+
+      if (mapInitializedRef.current) return;
+
+      mapRef.current = L.map("map").setView(lastPoint, 16);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap",
+      }).addTo(mapRef.current);
+
+      markerRef.current = L.marker(lastPoint, {
+        icon: customIcon,
+      }).addTo(mapRef.current);
+
+      pathRef.current = [...timeline];
+
+      // Marker de início da rota (primeiro ponto)
+      const startPoint = timeline[0];
+
+      startMarkerRef.current = L.marker(startPoint, {
+        icon: startIcon,
+      }).addTo(mapRef.current);
+
+      polylineRef.current = L.polyline(pathRef.current, {
+        weight: 4,
+        color: "#2563eb",
+      }).addTo(mapRef.current);
+
+      mapInitializedRef.current = true;
+    })();
+  }, []);
+
+  // =========================
+  // GPS cru
+  // =========================
   useEffect(() => {
     if (!navigator.geolocation) {
       alert("Geolocalização não suportada");
@@ -59,7 +109,6 @@ export default function TrackingPage() {
       (error) => {
         if (error.code === error.TIMEOUT) {
           console.warn("GPS demorou, aguardando novo fix...");
-          // reload para tentar recuperar o GPS
           window.location.reload();
           return;
         }
@@ -75,7 +124,9 @@ export default function TrackingPage() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
+  // =========================
   // Envio periódico
+  // =========================
   useEffect(() => {
     const interval = setInterval(async () => {
       const coords = lastPositionRef.current;
@@ -97,8 +148,6 @@ export default function TrackingPage() {
           heading: coords.heading,
           speed: coords.speed,
         };
-
-        console.log("Posição enviada", payload);
       } catch (err) {
         console.error("Falha ao enviar posição", err);
       }
@@ -108,22 +157,17 @@ export default function TrackingPage() {
   }, []);
 
   // =========================
-  // 🗺️ Observador de GPS
-  // MAPA + MARKER + ROTA
-  // CONSOME APENAS POSIÇÕES CONFIRMADAS
+  // Mapa + marker + rota (apenas posições confirmadas)
   // =========================
   useEffect(() => {
     const interval = setInterval(() => {
       const confirmed = lastConfirmedRef.current;
       if (!confirmed) return;
 
-      const latLng: [number, number] = [
-        confirmed.latitude,
-        confirmed.longitude,
-      ];
+      const latLng: L.LatLngTuple = [confirmed.latitude, confirmed.longitude];
 
-      // Inicializa o mapa na primeira vez
-      if (!mapRef.current) {
+      // Inicializa mapa via GPS caso não exista timeline
+      if (!mapRef.current && !mapInitializedRef.current) {
         mapRef.current = L.map("map").setView(latLng, 16);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -134,26 +178,37 @@ export default function TrackingPage() {
           icon: customIcon,
         }).addTo(mapRef.current);
 
-        // Primeiro ponto da rota confirmada
-        pathRef.current.push(latLng);
+        // Marker de início da rota
+        startMarkerRef.current = L.marker(latLng, {
+          icon: startIcon,
+        }).addTo(mapRef.current);
+
+        pathRef.current = [latLng];
+
         polylineRef.current = L.polyline(pathRef.current, {
           weight: 4,
+          color: "#2563eb",
         }).addTo(mapRef.current);
+
+        mapInitializedRef.current = true;
         return;
       }
 
-      // Atualiza a posição do marker
+      // Atualiza marker
       markerRef.current?.setLatLng(latLng);
 
-      // Atualiza a rota somente com pontos confirmados
-      pathRef.current.push(latLng);
-      polylineRef.current?.setLatLngs(pathRef.current);
+      // Evita duplicar ponto
+      const last = pathRef.current[pathRef.current.length - 1];
+      if (!last || last[0] !== latLng[0] || last[1] !== latLng[1]) {
+        pathRef.current.push(latLng);
+        polylineRef.current?.setLatLngs(pathRef.current);
+      }
 
-      // Rotação do marker pelo heading (se fizer sentido)
+      // Rotação por heading
       if (
         confirmed.heading != null &&
         confirmed.speed != null &&
-        confirmed.speed > 1 && // evita girar parado
+        confirmed.speed > 1 &&
         markerRef.current
       ) {
         const el = markerRef.current.getElement();
@@ -163,9 +218,8 @@ export default function TrackingPage() {
         }
       }
 
-      // Centraliza o mapa se a flag estiver ativa
       if (centerMap) {
-        mapRef.current.setView(latLng);
+        mapRef.current?.setView(latLng);
       }
     }, 500);
 
@@ -175,7 +229,6 @@ export default function TrackingPage() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Route Tracker</h1>
-      <p>Enviando localização a cada {INTERVAL_MS / 1000} segundos...</p>
 
       <label style={{ display: "block", marginTop: 10 }}>
         <input
